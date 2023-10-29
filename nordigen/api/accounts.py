@@ -28,7 +28,7 @@ class AccountApi:
         self.__request = client.request
         self.__id: str = id
 
-    def __get(self, endpoint: str, parameters: dict = {}):
+    async def __get(self, endpoint: str, parameters: dict = {}):
         """
         Construct get request.
 
@@ -39,10 +39,10 @@ class AccountApi:
             [type]: [description]
         """
         url = f"{self.__ENDPOINT}/{self.__id}/{endpoint}/"
-        return self.__request(HTTPMethod.GET, f"{url}", parameters)
+        return await self.__request(HTTPMethod.GET, f"{url}", parameters)
 
 
-    def __getPremium(self, path, parameters: dict = {}):
+    async def __getPremium(self, path, parameters: dict = {}):
         """
         Construct get request for premium endpoints
 
@@ -54,9 +54,9 @@ class AccountApi:
             _type_: _description_
         """
         url = f'{self.__ENDPOINT}/premium/{self.__id}/{path}'
-        return self.__request(HTTPMethod.GET, f"{url}", parameters)
+        return await self.__request(HTTPMethod.GET, f"{url}", parameters)
 
-    def get_metadata(self) -> dict:
+    async def get_metadata(self) -> dict:
         """
         Access account metadata.
         Information about the account record, such as the processing status and IBAN.
@@ -65,11 +65,11 @@ class AccountApi:
         Returns:
             AccountData: account metadata
         """
-        return self.__request(
+        return await self.__request(
             HTTPMethod.GET, f"{self.__ENDPOINT}/{self.__id}/"
         )
 
-    def get_balances(self) -> dict:
+    async def get_balances(self) -> dict:
         """
         Access account balances.
         Balances will be returned in Berlin Group PSD2 format.
@@ -77,9 +77,9 @@ class AccountApi:
         Returns:
             dict: dictionary with balances
         """
-        return self.__get("balances")
+        return await self.__get("balances")
 
-    def get_details(self) -> dict:
+    async def get_details(self) -> dict:
         """
         Access account details.
         Account details will be returned in Berlin Group PSD2 format.
@@ -87,9 +87,9 @@ class AccountApi:
         Returns:
             dict: dictionary with account details
         """
-        return self.__get("details")
+        return await self.__get("details")
 
-    def get_transactions(
+    async def get_transactions(
         self,
         date_from: Optional[str] = None,
         date_to: Optional[str] = None
@@ -106,10 +106,10 @@ class AccountApi:
             "date_from": date_from,
             "date_to": date_to
         }
-        return self.__get("transactions", date_range)
+        return await self.__get("transactions", date_range)
 
 
-    def get_premium_details(self, country: str = "") -> dict:
+    async def get_premium_details(self, country: str = "") -> dict:
         """
         Get premium details
 
@@ -122,18 +122,18 @@ class AccountApi:
         parameters = {
             "country": country
         }
-        return self.__getPremium("details", parameters)
+        return await self.__getPremium("details", parameters)
 
-    def get_premium_balances(self) -> dict:
+    async def get_premium_balances(self) -> dict:
         """
         Get premium balances
 
         Returns:
             dict: balances data
         """
-        return self.__getPremium("balances")
+        return await self.__getPremium("balances")
 
-    def get_premium_transactions(
+    async def get_premium_transactions(
         self,
         country: Optional[str] = None,
         date_from: Optional[str] = None,
@@ -155,4 +155,4 @@ class AccountApi:
             "date_to": date_to,
             "country": country or "",
         }
-        return self.__getPremium("transactions", parameters)
+        return await self.__getPremium("transactions", parameters)
