@@ -26,7 +26,7 @@ class InstitutionsApi:
         self.__request = client.request
         self.ENDPOINT = "institutions"
 
-    def get_institutions(self, country: Optional[str] = None) -> List[Institutions]:
+    async def get_institutions(self, country: Optional[str] = None) -> List[Institutions]:
         """
         Get all available Institutions (banks) in a given country or for all countries if
         country isn't specified.
@@ -41,11 +41,11 @@ class InstitutionsApi:
         if country:
             url = f"{self.ENDPOINT}/?country={country}"
 
-        return self.__request(
+        return await self.__request(
             HTTPMethod.GET, url
         )
 
-    def get_institution_by_id(self, id: str) -> Institutions:
+    async def get_institution_by_id(self, id: str) -> Institutions:
         """
         Get details about specific institution by its id.
 
@@ -55,9 +55,9 @@ class InstitutionsApi:
         Returns:
             Institutions: Institutions json object
         """
-        return self.__request(HTTPMethod.GET, f"{self.ENDPOINT}/{id}/")
+        return await self.__request(HTTPMethod.GET, f"{self.ENDPOINT}/{id}/")
 
-    def get_institution_id_by_name(
+    async def get_institution_id_by_name(
         self, country: str, institution: str
     ) -> str:
         """
@@ -73,7 +73,7 @@ class InstitutionsApi:
         Returns:
             str: Institution id
         """
-        institutions = self.get_institutions(country)
+        institutions = await self.get_institutions(country)
 
         for bank in institutions:
             if institution.lower() in bank["name"].lower():

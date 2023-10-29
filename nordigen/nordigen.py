@@ -1,8 +1,10 @@
 import json
 from typing import Dict, Final, Optional
 
-import requests
-from requests.models import HTTPError, Response
+# import requests
+# from requests.models import HTTPError, Response
+import aiohttp
+from aiohttp import ClientResponseError, ClientSession
 
 from nordigen.api import (
     AccountApi,
@@ -82,7 +84,7 @@ class NordigenClient:
         self._token = value
         self._headers["Authorization"] = f"Bearer {value}"
 
-    def generate_token(self) -> TokenType:
+    async def generate_token(self) -> TokenType:
         """
         Generate new access token.
 
@@ -90,7 +92,7 @@ class NordigenClient:
             TokenType: Dict that contains access and refresh token
         """
         payload = {"secret_key": self.secret_key, "secret_id": self.secret_id}
-        response = self.request(
+        response = await self.request(
             HTTPMethod.POST,
             f"{self.__ENDPOINT}/new/",
             payload,
@@ -100,7 +102,7 @@ class NordigenClient:
         self.token = response["access"]
         return response
 
-    def exchange_token(self, refresh_token: str) -> TokenType:
+    async def exchange_token(self, refresh_token: str) -> TokenType:
         """
         Exchange refresh token for access token.
 
@@ -111,7 +113,7 @@ class NordigenClient:
             TokenType: Dict that contains new access token
         """
         payload = {"refresh": refresh_token}
-        response = self.request(
+        response = await self.request(
             HTTPMethod.POST,
             f"{self.__ENDPOINT}/refresh/",
             payload,
@@ -121,13 +123,13 @@ class NordigenClient:
         self.token = response["access"]
         return response
 
-    def request(
+    async def request(
         self,
         method: HTTPMethod,
         endpoint: str,
-        data: Dict = None,
-        headers: Dict = None,
-    ) -> Response:
+        data: Optional[Dict] = None,
+        headers: Optional[Dict] = None,
+    ) -> Dict:
         """
         Request wrapper for Nordigen library.
 
@@ -151,25 +153,24 @@ class NordigenClient:
 
         data = self.data_filter.filter_payload(data)
 
-        if method == HTTPMethod.GET:
-            response = requests.get(**request_meta, params=data, timeout=self._timeout)
-        elif method == HTTPMethod.POST:
-            response = requests.post(**request_meta, data=json.dumps(data), timeout=self._timeout)
-        elif method == HTTPMethod.PUT:
-            response = requests.put(**request_meta, data=json.dumps(data), timeout=self._timeout)
-        elif method == HTTPMethod.DELETE:
-            response = requests.delete(**request_meta, params=data, timeout=self._timeout)
-        else:
-            raise Exception(f'Method "{method}" is not supported')
+        async with ClientSession() as session:
+            if method == HTTPMethod.GET:
+                response = await session.get(**request_meta, params=data, timeout=self._timeout)
+            elif method == HTTPMethod.POST:
+                response = await session.post(**request_meta, data=json.dumps(data), timeout=self._timeout)
+            elif method == HTTPMethod.PUT:
+                response = await session.put(**request_meta, data=json.dumps(data), timeout=self._timeout)
+            elif method == HTTPMethod.DELETE:
+                response = await session.delete(**request_meta, params=data, timeout=self._timeout)
+            else:
+                raise Exception(f'Method "{method}" is not supported')
 
-        if response.ok:
-            return response.json()
+            if 200 <= response.status < 300:
+                return await response.json()
 
-        raise HTTPError(
-            {"response": response.json(), "status": response.status_code}, response=response
-        )
+            raise ClientResponseError(response.request_info, response.history, status=response.status)
 
-    def initialize_session(
+    async def initialize_session(
         self,
         redirect_uri: str,
         institution_id: str,
@@ -187,7 +188,7 @@ class NordigenClient:
             Dict[str]: link to initiate authorization with bank and requisition_id
         """
         # Create agreement
-        agreement = self.agreement.create_agreement(
+        agreement = await self.agreement.create_agreement(
             max_historical_days=max_historical_days,
             access_valid_for_days=access_valid_for_days,
             institution_id=institution_id,
@@ -201,7 +202,7 @@ class NordigenClient:
         }
 
         # Create requisition
-        requisition = self.requisition.create_requisition(**requisition_dict)
+        requisition = await self.requisition.create_requisition(**requisition_dict)
 
         return RequisitionDto(
             link=requisition["link"], requisition_id=requisition["id"]

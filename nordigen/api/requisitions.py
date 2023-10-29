@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Final, List
+from typing import TYPE_CHECKING, Dict, Final, List, Optional
 
 from nordigen.types.http_enums import HTTPMethod
 from nordigen.types.types import Requisition
@@ -25,7 +25,7 @@ class RequisitionsApi:
     def __init__(self, client: NordigenClient) -> None:
         self.__client = client
 
-    def get_requisitions(
+    async def get_requisitions(
         self, limit: int = 100, offset: int = 0
     ) -> Requisition:
         """
@@ -39,17 +39,17 @@ class RequisitionsApi:
             Requisition: json response with requisition details
         """
         payload = {"limit": limit, "offset": offset}
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.GET, f"{self.ENDPOINT}/", payload
         )
 
-    def create_requisition(
+    async def create_requisition(
         self,
         redirect_uri: str,
         reference_id: str,
-        institution_id: str = None,
-        agreement: List[str] = None,
-        user_language: str = None,
+        institution_id: Optional[str] = None,
+        agreement: Optional[List[str]] = None,
+        user_language: Optional[str] = None,
     ) -> Requisition:
         """
         Create requisition for creating links and retrieving accounts.
@@ -77,11 +77,11 @@ class RequisitionsApi:
         if agreement:
             payload["agreement"] = agreement
 
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.POST, f"{self.ENDPOINT}/", payload
         )
 
-    def get_requisition_by_id(self, requisition_id: str) -> Requisition:
+    async def get_requisition_by_id(self, requisition_id: str) -> Requisition:
         """
         Get list of requisitions.
 
@@ -90,11 +90,11 @@ class RequisitionsApi:
         Returns:
             Requisition: account details
         """
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.GET, f"{self.ENDPOINT}/{requisition_id}/"
         )
 
-    def delete_requisition(self, requisition_id: str) -> Dict:
+    async def delete_requisition(self, requisition_id: str) -> Dict:
         """
         Delete requisition by id.
 
@@ -103,6 +103,6 @@ class RequisitionsApi:
 
         Returns: Dict that consist confirmation message that requisition has been deleted
         """
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.DELETE, f"{self.ENDPOINT}/{requisition_id}"
         )

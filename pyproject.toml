@@ -12,7 +12,7 @@ include = ["CHANGELOG.md", "README.md", "LICENSE", "./nordigen/**/*"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-requests = "^2.26.0"
+aiohttp = "^3.8.6"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.5"

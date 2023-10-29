@@ -27,7 +27,7 @@ class AgreementsApi:
     def __init__(self, client: NordigenClient) -> None:
         self.__client = client
 
-    def create_agreement(
+    async def create_agreement(
         self,
         institution_id: str,
         max_historical_days: int = 90,
@@ -56,11 +56,11 @@ class AgreementsApi:
             "institution_id": institution_id,
         }
 
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.POST, f"{self.__ENDPOINT}/", payload
         )
 
-    def get_agreements(
+    async def get_agreements(
         self, limit: int = 100, offset: int = 0
     ) -> AgreementsList:
         """
@@ -76,11 +76,11 @@ class AgreementsApi:
             AgreementsList: json object with enduser agreements
         """
         params = {"limit": limit, "offset": offset}
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.GET, f"{self.__ENDPOINT}/", params
         )
 
-    def get_agreement_by_id(self, agreement_id: str) -> EnduserAgreement:
+    async def get_agreement_by_id(self, agreement_id: str) -> EnduserAgreement:
         """
         Get agreement by agreement id.
 
@@ -89,11 +89,11 @@ class AgreementsApi:
         Returns:
             EnduserAgreement: JSON object with specific enduser agreements
         """
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.GET, f"{self.__ENDPOINT}/{agreement_id}"
         )
 
-    def delete_agreement(self, agreement_id: str) -> Dict:
+    async def delete_agreement(self, agreement_id: str) -> Dict:
         """
         Delete End User Agreement by id.
 
@@ -103,11 +103,11 @@ class AgreementsApi:
         Returns:
             Dict: Dictionary with deleted agreement
         """
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.DELETE, f"{self.__ENDPOINT}/{agreement_id}"
         )
 
-    def accept_agreement(
+    async def accept_agreement(
         self, agreement_id: str, ip: str, user_agent: str
     ) -> Dict:
         """
@@ -121,7 +121,7 @@ class AgreementsApi:
             Dict: Dict with information on accepted agreement
         """
         payload = {"user_agent": user_agent, "ip_address": ip}
-        return self.__client.request(
+        return await self.__client.request(
             HTTPMethod.PUT,
             f"{self.__ENDPOINT}/{agreement_id}/accept/",
             payload,
